@@ -10,6 +10,12 @@ from unidecode import unidecode
 import streamlit as st
 from streamlit_folium import st_folium
 
+
+#credentials json streamlit
+
+import os
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "credentials.json"
+
 # --- Config ---
 project_id = "ts2g-462411"
 
