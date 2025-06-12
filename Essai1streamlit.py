@@ -56,9 +56,6 @@ folium.GeoJson(
         aliases=['Département', 'Établissements'])
 ).add_to(m_dept)
 
-st.subheader("Carte par Départements")
-st_folium(m_dept, width=700)
-
 # --- Carte régions ---
 df_counts_region = df_annuaire.groupby('region_norm').size().reset_index(name='nb_etablissements')
 gdf_final_region = gdf_regions.merge(df_counts_region, left_on='nom_norm', right_on='region_norm', how='left')
@@ -85,5 +82,12 @@ folium.GeoJson(
         aliases=['Région', 'Établissements'])
 ).add_to(m_region)
 
-st.subheader("Carte par Régions")
-st_folium(m_region, width=700)
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("Carte par Départements")
+    st_folium(m_dept, width=350)
+
+with col2:
+    st.subheader("Carte par Régions")
+    st_folium(m_region, width=350)
