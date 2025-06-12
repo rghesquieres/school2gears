@@ -10,7 +10,7 @@ from streamlit_folium import st_folium
 from google.oauth2 import service_account
 
 # Authentification via secrets Streamlit
-creds_dict = st.secrets["gcp_service_account"]
+creds_dict = st.secrets
 credentials = service_account.Credentials.from_service_account_info(creds_dict)
 project_id = creds_dict["project_id"]
 
