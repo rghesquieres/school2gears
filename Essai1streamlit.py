@@ -3,9 +3,6 @@ import geopandas as gpd
 import folium
 from shapely import wkt
 from unidecode import unidecode
-import streamlit as st
-from streamlit_folium import st_folium
-
 # --- Données annuaire locales ---
 df_annuaire = pd.read_csv('annuaire.csv')
 df_annuaire['departement_norm'] = df_annuaire['departement'].apply(lambda x: unidecode(str(x)).upper())
@@ -22,13 +19,6 @@ df_regs = pd.read_csv("region_geographie.csv")
 df_regs['geometry'] = df_regs['reg_geography'].apply(wkt.loads)
 df_regs['nom_norm'] = df_regs['region'].apply(lambda x: unidecode(str(x)).upper())
 gdf_regions = gpd.GeoDataFrame(df_regs, geometry='geometry', crs="EPSG:4326")
-
-# --- Interface Streamlit ---
-st.title("Cartes des établissements (Régions et Départements)")
-statut_filter = st.radio("Filtrer par statut :", ["Tous", "Public", "Privé"])
-
-if statut_filter != "Tous":
-    df_annuaire = df_annuaire[df_annuaire['statut'].str.contains(statut_filter, case=False, na=False)]
 
 # --- Carte départements ---
 df_counts_dept = df_annuaire.groupby('departement_norm').size().reset_index(name='nb_etablissements')
@@ -82,12 +72,6 @@ folium.GeoJson(
         aliases=['Région', 'Établissements'])
 ).add_to(m_region)
 
-col1, col2 = st.columns(2)
-
-with col1:
-    st.subheader("Carte par Départements")
-    st_folium(m_dept, width=350)
-
-with col2:
-    st.subheader("Carte par Régions")
-    st_folium(m_region, width=350)
+m_dept.save("carte_departements.html")
+m_region.save("carte_regions.html")
+print("Cartes exportées : carte_departements.html et carte_regions.html")
