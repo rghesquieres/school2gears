@@ -14,7 +14,7 @@ from streamlit_folium import st_folium
 project_id = "ts2g-462411"
 
 # --- Données annuaire locales ---
-df_annuaire = pd.read_csv('/Users/rafou/Desktop/Json Region Departement/annuaire.csv')
+df_annuaire = df_annuaire = pd.read_csv('annuaire.csv')
 df_annuaire['departement_norm'] = df_annuaire['departement'].apply(lambda x: unidecode(str(x)).upper())
 df_annuaire['region_norm'] = df_annuaire['region'].apply(lambda x: unidecode(str(x)).upper())
 
