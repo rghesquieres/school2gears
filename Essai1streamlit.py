@@ -1,4 +1,3 @@
-import os
 import pandas as pd
 from pandas_gbq import read_gbq
 import geopandas as gpd
@@ -7,14 +6,11 @@ from shapely import wkt
 from unidecode import unidecode
 import streamlit as st
 from streamlit_folium import st_folium
-from google.oauth2.service_account import Credentials
-import json
-import toml
+from google.oauth2 import service_account
 
 # --- Authentification via secrets Streamlit ---
-creds_dict = toml.loads(st.secrets["gcp_service_account"])
-credentials = Credentials.from_service_account_info(creds_dict)
-project_id = creds_dict["project_id"]
+credentials = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"])
+project_id = st.secrets["gcp_service_account"]["project_id"]
 
 # --- Données annuaire locales ---
 df_annuaire = pd.read_csv('annuaire.csv')
@@ -104,4 +100,4 @@ folium.GeoJson(
 ).add_to(m_region)
 
 st.subheader("Carte par Régions")
-st_folium(m_region, width=700)
+st_folium(m_region, width=700)'
