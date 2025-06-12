@@ -100,4 +100,4 @@ folium.GeoJson(
 ).add_to(m_region)
 
 st.subheader("Carte par Régions")
-st_folium(m_region, width=700)'
+st_folium(m_region, width=700)
