@@ -27,7 +27,7 @@ query_deps = """
 SELECT dep_geography, departement
 FROM `ts2g-462411.clean.departements_geographie`
 """
-df_deps = read_gbq(query_deps, project_id=project_id, credentials=credentials)
+df_deps = read_gbq(query_deps, project_id=project_id, credentials=creds)
 df_deps['geometry'] = df_deps['dep_geography'].apply(wkt.loads)
 df_deps['nom_norm'] = df_deps['departement'].apply(lambda x: unidecode(str(x)).upper())
 gdf_departements = gpd.GeoDataFrame(df_deps, geometry='geometry', crs="EPSG:4326")
@@ -37,7 +37,7 @@ query_regs = """
 SELECT reg_geography, region
 FROM `ts2g-462411.clean.region_geographie`
 """
-df_regs = read_gbq(query_regs, project_id=project_id, credentials=credentials)
+df_regs = read_gbq(query_regs, project_id=project_id, credentials=creds)
 df_regs['geometry'] = df_regs['reg_geography'].apply(wkt.loads)
 df_regs['nom_norm'] = df_regs['region'].apply(lambda x: unidecode(str(x)).upper())
 gdf_regions = gpd.GeoDataFrame(df_regs, geometry='geometry', crs="EPSG:4326")
