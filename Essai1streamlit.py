@@ -7,12 +7,15 @@ from shapely import wkt
 from unidecode import unidecode
 import streamlit as st
 from streamlit_folium import st_folium
+from google.oauth2 import service_account
 
-# --- Auth Google Cloud ---
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "credentials.json"
+# Authentification via secrets Streamlit
+creds_dict = st.secrets["gcp_service_account"]
+credentials = service_account.Credentials.from_service_account_info(creds_dict)
+project_id = creds_dict["project_id"]
 
 # --- Config ---
-project_id = "ts2g-462411"
+# project_id = "ts2g-462411"
 
 # --- Données annuaire locales ---
 df_annuaire = pd.read_csv('annuaire.csv')
@@ -24,7 +27,7 @@ query_deps = """
 SELECT dep_geography, departement
 FROM `ts2g-462411.clean.departements_geographie`
 """
-df_deps = read_gbq(query_deps, project_id=project_id)
+df_deps = read_gbq(query_deps, project_id=project_id, credentials=credentials)
 df_deps['geometry'] = df_deps['dep_geography'].apply(wkt.loads)
 df_deps['nom_norm'] = df_deps['departement'].apply(lambda x: unidecode(str(x)).upper())
 gdf_departements = gpd.GeoDataFrame(df_deps, geometry='geometry', crs="EPSG:4326")
@@ -34,7 +37,7 @@ query_regs = """
 SELECT reg_geography, region
 FROM `ts2g-462411.clean.region_geographie`
 """
-df_regs = read_gbq(query_regs, project_id=project_id)
+df_regs = read_gbq(query_regs, project_id=project_id, credentials=credentials)
 df_regs['geometry'] = df_regs['reg_geography'].apply(wkt.loads)
 df_regs['nom_norm'] = df_regs['region'].apply(lambda x: unidecode(str(x)).upper())
 gdf_regions = gpd.GeoDataFrame(df_regs, geometry='geometry', crs="EPSG:4326")
