@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-# coding: utf-8
-
+import os
 import pandas as pd
 from pandas_gbq import read_gbq
 import geopandas as gpd
@@ -10,21 +8,18 @@ from unidecode import unidecode
 import streamlit as st
 from streamlit_folium import st_folium
 
-
-#credentials json streamlit
-
-import os
+# --- Auth Google Cloud ---
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "credentials.json"
 
 # --- Config ---
 project_id = "ts2g-462411"
 
 # --- Données annuaire locales ---
-df_annuaire = df_annuaire = pd.read_csv('annuaire.csv')
+df_annuaire = pd.read_csv('annuaire.csv')
 df_annuaire['departement_norm'] = df_annuaire['departement'].apply(lambda x: unidecode(str(x)).upper())
 df_annuaire['region_norm'] = df_annuaire['region'].apply(lambda x: unidecode(str(x)).upper())
 
-# --- Départements depuis BigQuery ---
+# --- Données départements depuis BigQuery ---
 query_deps = """
 SELECT dep_geography, departement
 FROM `ts2g-462411.clean.departements_geographie`
@@ -34,7 +29,7 @@ df_deps['geometry'] = df_deps['dep_geography'].apply(wkt.loads)
 df_deps['nom_norm'] = df_deps['departement'].apply(lambda x: unidecode(str(x)).upper())
 gdf_departements = gpd.GeoDataFrame(df_deps, geometry='geometry', crs="EPSG:4326")
 
-# --- Régions depuis BigQuery ---
+# --- Données régions depuis BigQuery ---
 query_regs = """
 SELECT reg_geography, region
 FROM `ts2g-462411.clean.region_geographie`
@@ -47,9 +42,11 @@ gdf_regions = gpd.GeoDataFrame(df_regs, geometry='geometry', crs="EPSG:4326")
 # --- Interface Streamlit ---
 st.title("Cartes des établissements (Régions et Départements)")
 statut_filter = st.radio("Filtrer par statut :", ["Tous", "Public", "Privé"])
-
 if statut_filter != "Tous":
     df_annuaire = df_annuaire[df_annuaire['statut'].str.contains(statut_filter, case=False, na=False)]
+
+# --- Cartes côte à côte ---
+col1, col2 = st.columns(2)
 
 # --- Carte départements ---
 df_counts_dept = df_annuaire.groupby('departement_norm').size().reset_index(name='nb_etablissements')
@@ -77,8 +74,9 @@ folium.GeoJson(
         aliases=['Département', 'Établissements'])
 ).add_to(m_dept)
 
-st.subheader("Carte par Départements")
-st_folium(m_dept, width=700)
+with col1:
+    st.subheader("Par Départements")
+    st_folium(m_dept, width=500, height=500)
 
 # --- Carte régions ---
 df_counts_region = df_annuaire.groupby('region_norm').size().reset_index(name='nb_etablissements')
@@ -97,14 +95,15 @@ folium.Choropleth(
     legend_name="Nombre d'établissements"
 ).add_to(m_region)
 
-folium.GeoJson(
-    gdf_final_region,
-    name='Régions',
-    style_function=lambda x: {'fillOpacity': 0, 'color': 'black', 'weight': 0.5},
-    tooltip=folium.GeoJsonTooltip(
-        fields=['region', 'nb_etablissements'],
-        aliases=['Région', 'Établissements'])
-).add_to(m_region)
+for _, row in gdf_final_region.iterrows():
+    centroid = row['geometry'].centroid
+    folium.map.Marker(
+        [centroid.y, centroid.x],
+        icon=folium.DivIcon(
+            html=f"<div style='font-size: 10pt; color: black; text-align:center'>{int(row['nb_etablissements'])}</div>"
+        )
+    ).add_to(m_region)
 
-st.subheader("Carte par Régions")
-st_folium(m_region, width=700)
+with col2:
+    st.subheader("Par Régions")
+    st_folium(m_region, width=500, height=500)
