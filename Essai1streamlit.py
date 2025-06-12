@@ -1,39 +1,24 @@
 import pandas as pd
-from google.cloud import bigquery
 import geopandas as gpd
 import folium
 from shapely import wkt
 from unidecode import unidecode
 import streamlit as st
 from streamlit_folium import st_folium
-from google.oauth2 import service_account
-
-# --- Authentification via secrets Streamlit ---
-credentials = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"])
-project_id = st.secrets["gcp_service_account"]["project_id"]
 
 # --- Données annuaire locales ---
 df_annuaire = pd.read_csv('annuaire.csv')
 df_annuaire['departement_norm'] = df_annuaire['departement'].apply(lambda x: unidecode(str(x)).upper())
 df_annuaire['region_norm'] = df_annuaire['region'].apply(lambda x: unidecode(str(x)).upper())
 
-# --- Départements depuis BigQuery ---
-query_deps = """
-SELECT dep_geography, departement
-FROM `ts2g-462411.clean.departements_geographie`
-"""
-client = bigquery.Client(project=project_id, credentials=credentials)
-df_deps = client.query(query_deps).to_dataframe()
+# --- Départements depuis fichier local ---
+df_deps = pd.read_csv("departements_geographie.csv")
 df_deps['geometry'] = df_deps['dep_geography'].apply(wkt.loads)
 df_deps['nom_norm'] = df_deps['departement'].apply(lambda x: unidecode(str(x)).upper())
 gdf_departements = gpd.GeoDataFrame(df_deps, geometry='geometry', crs="EPSG:4326")
 
-# --- Régions depuis BigQuery ---
-query_regs = """
-SELECT reg_geography, region
-FROM `ts2g-462411.clean.region_geographie`
-"""
-df_regs = client.query(query_regs).to_dataframe()
+# --- Régions depuis fichier local ---
+df_regs = pd.read_csv("region_geographie.csv")
 df_regs['geometry'] = df_regs['reg_geography'].apply(wkt.loads)
 df_regs['nom_norm'] = df_regs['region'].apply(lambda x: unidecode(str(x)).upper())
 gdf_regions = gpd.GeoDataFrame(df_regs, geometry='geometry', crs="EPSG:4326")
